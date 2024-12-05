@@ -42,14 +42,14 @@ void sendmsg (char *user, char *target, char *msg) {
 
 	//Open server FIFO
 	int serverFD = open("serverFIFO", O_WRONLY);
-	if (server < 0) {
+	if (serverFD < 0) {
 		perror("Error opening serverFIFO");
 		return;
 	}
 
 	//Msg struct
 	struct message msgToSend;
-	strncpy(msgToSend.sourse, user, sizeof(msgToSend.source));
+	strncpy(msgToSend.source, user, sizeof(msgToSend.source));
 	strncpy(msgToSend.target, target, sizeof(msgToSend.target));
 	strncpy(msgToSend.msg, msg, sizeof(msgToSend.msg));
 
@@ -126,6 +126,7 @@ int main(int argc, char **argv) {
     if (pthread_create(&listenerThread, NULL, messageListener, (void *)uName) != 0) {
 	    perror("Error creating message listener thread");
 	    exit(1);
+    }
     	
 
 
@@ -158,6 +159,7 @@ int main(int argc, char **argv) {
 		if (target == NULL) {
 			printf("seandmsg: yous have to specify target user\n");
 			continue;
+		}
 
 		char *msg = strtok(NULL, "\0");
 		if (msg == NULL) {
@@ -167,7 +169,7 @@ int main(int argc, char **argv) {
 	
 		sendmsg(uName, target, msg);
 		continue;
-		}
+	}
 
 		// NOTE: The message itself can contain spaces
 		// If the user types: "sendmsg user1 hello there"
@@ -178,18 +180,6 @@ int main(int argc, char **argv) {
 		// printf("sendmsg: you have to specify target user\n");
 		// if no message is specified, you should print the followingA
  		// printf("sendmsg: you have to enter a message\n");
-
-
-
-
-
-
-
-
-
-
-		continue;
-	}
 
 	if (strcmp(cmd,"exit")==0) break;
 
