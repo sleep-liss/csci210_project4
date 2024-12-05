@@ -7,4 +7,5 @@ server: server.c
 @PHONY: clean
 
 clean:
-	rm -f rsh
+	rm -f rsh server
+
