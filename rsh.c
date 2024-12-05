@@ -30,14 +30,36 @@ void sendmsg (char *user, char *target, char *msg) {
 	// TODO:
 	// Send a request to the server to send the message (msg) to the target user (target)
 	// by creating the message structure and writing it to server's FIFO
+	if (!target) {
+		printf("sendmsg: you have to specify target user\n");
+		return;
+	}
+	if (!msg) {
+		printf("sendmsg: you have to enter a message\n");
+		return;
+	}
+	
+
+	//Open server FIFO
+	int serverFD = open("serverFIFO", O_WRONLY);
+	if (server < 0) {
+		perror("Error opening serverFIFO");
+		return;
+	}
+
+	//Msg struct
+	struct message msgToSend;
+	strncpy(msgToSend.sourse, user, sizeof(msgToSend.source));
+	strncpy(msgToSend.target, target, sizeof(msgToSend.target));
+	strncpy(msgToSend.msg, msg, sizeof(msgToSend.msg));
 
 
-
-
-
-
-
-
+	//write msg to serverFIFO
+	if (write(serverFD, &msgToSend, sizeof(msgToSend)) < 0) {
+		perror("Error writing to serverFIFO");
+	}
+	
+	close(serverFD);
 }
 
 void* messageListener(void *arg) {
@@ -48,12 +70,27 @@ void* messageListener(void *arg) {
 	// following format
 	// Incoming message from [source]: [message]
 	// put an end of line at the end of the message
+	
+	char fifoName[50];
+	snprintf(fifoName, sizeof(fifoName), "%s", (char *)arg);
+	int userFIFO = open(fifoName, O_RDONLY);
+	if (userFIFO < 0) {
+		perror("Error opening user FIFO");
+		pthread_exit(NULL);
+	}
 
+	struct message incomingMsg;
 
-
-
-
-
+	//loop
+	while (1) {
+		ssize_t bytesRead = read(userFIFO, &incomingMsg, sizeof(incomingMsg));
+		if (bytesRead > 0) {
+			printf("Incoming message from [%s]: %s\n", incomingMsg.source, incomingMsg.msg);
+		} else if (bytesRead > 0) {
+			perror("Error reading from user FIFO");
+		}
+	}
+	close(userFIFO); //this wont be reached but im puttint it there for proper practice
 	pthread_exit((void*)0);
 }
 
@@ -85,7 +122,11 @@ int main(int argc, char **argv) {
 
     // TODO:
     // create the message listener thread
-
+    pthread_t listenerThread;
+    if (pthread_create(&listenerThread, NULL, messageListener, (void *)uName) != 0) {
+	    perror("Error creating message listener thread");
+	    exit(1);
+    	
 
 
 
@@ -113,6 +154,20 @@ int main(int argc, char **argv) {
 	if (strcmp(cmd,"sendmsg")==0) {
 		// TODO: Create the target user and
 		// the message string and call the sendmsg function
+		char *target = strtok(NULL, " ");
+		if (target == NULL) {
+			printf("seandmsg: yous have to specify target user\n");
+			continue;
+
+		char *msg = strtok(NULL, "\0");
+		if (msg == NULL) {
+			printf("sendmsg: you have to enter a message\n");
+			continue;
+		}
+	
+		sendmsg(uName, target, msg);
+		continue;
+		}
 
 		// NOTE: The message itself can contain spaces
 		// If the user types: "sendmsg user1 hello there"
