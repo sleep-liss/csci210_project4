@@ -41,7 +41,7 @@ int main() {
 		// TODO:
 		// open target FIFO and write the whole message struct to the target FIFO
 		char targetFIFO[50];
-		snprintf(targetFIFo, sizeof(targetFIFO), "%s", req.target);
+		snprintf(targetFIFO, sizeof(targetFIFO), "%s", req.target);
 		target = open(targetFIFO, O_WRONLY);
 		if (target < 0) {
 			printf("Could not open FIFO for %s\n", req.target);
