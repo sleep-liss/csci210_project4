@@ -20,7 +20,8 @@ struct message {
 	char msg[200];
 };
 
-void terminate(int sig) {
+void terminate(int sig) 
+{
         printf("Exiting....\n");
         fflush(stdout);
         exit(0);
@@ -30,35 +31,29 @@ void sendmsg (char *user, char *target, char *msg) {
 	// TODO:
 	// Send a request to the server to send the message (msg) to the target user (target)
 	// by creating the message structure and writing it to server's FIFO
-	if (!target) {
-		printf("sendmsg: you have to specify target user\n");
-		return;
-	}
-	if (!msg) {
-		printf("sendmsg: you have to enter a message\n");
-		return;
-	}
+	//if (!target) {
+	//	printf("sendmsg: you have to specify target user\n");
+	//	return;
+//	}
+//	if (!msg) {
+//		printf("sendmsg: you have to enter a message\n");
+//		return;
+//	}
 	
 
 	//Open server FIFO
-	int serverFD = open("serverFIFO", O_WRONLY);
-	if (serverFD < 0) {
-		perror("Error opening serverFIFO");
-		return;
-	}
+	int serverFD;
+	serverFD = open("serverFIFO", O_WRONLY);
 
 	//Msg struct
 	struct message msgToSend;
-	strncpy(msgToSend.source, user, sizeof(msgToSend.source));
-	strncpy(msgToSend.target, target, sizeof(msgToSend.target));
-	strncpy(msgToSend.msg, msg, sizeof(msgToSend.msg));
+	strcpy(msgToSend.source, user);
+	strcpy(msgToSend.target, target);
+	strcpy(msgToSend.msg, msg);
 
 
 	//write msg to serverFIFO
-	if (write(serverFD, &msgToSend, sizeof(msgToSend)) < 0) {
-		perror("Error writing to serverFIFO");
-	}
-	
+	write(serverFD, &msgToSend, sizeof(struct message));
 	close(serverFD);
 }
 
@@ -73,11 +68,13 @@ void* messageListener(void *arg) {
 	
 	char fifoName[50];
 	snprintf(fifoName, sizeof(fifoName), "%s", (char *)arg);
-	int userFIFO = open(fifoName, O_RDONLY);
+	int userFIFO;
+	userFIFO = open(fifoName, O_RDONLY);
 	if (userFIFO < 0) {
 		perror("Error opening user FIFO");
 		pthread_exit(NULL);
 	}
+
 
 	struct message incomingMsg;
 
@@ -85,12 +82,12 @@ void* messageListener(void *arg) {
 	while (1) {
 		ssize_t bytesRead = read(userFIFO, &incomingMsg, sizeof(incomingMsg));
 		if (bytesRead > 0) {
-			printf("Incoming message from [%s]: %s\n", incomingMsg.source, incomingMsg.msg);
+			printf("Incoming message from %s: %s\n", incomingMsg.source, incomingMsg.msg);
 		} else if (bytesRead > 0) {
 			perror("Error reading from user FIFO");
 		}
 	}
-	close(userFIFO); //this wont be reached but im puttint it there for proper practice
+
 	pthread_exit((void*)0);
 }
 
@@ -157,7 +154,7 @@ int main(int argc, char **argv) {
 		// the message string and call the sendmsg function
 		char *target = strtok(NULL, " ");
 		if (target == NULL) {
-			printf("seandmsg: yous have to specify target user\n");
+			printf("sendmsg: you have to specify target user\n");
 			continue;
 		}
 

@@ -31,7 +31,7 @@ int main() {
 	while (1) {
 		// TODO:
 		// read requests from serverFIFO
-		ssize_t bytesRead = read(server, &req, sizeof(req));
+		ssize_t bytesRead = read(server, &req, sizeof(struct message));
 		if (bytesRead < 0) {
 			perror("Failed to read from serverFIFO");
 			continue;
